@@ -2,199 +2,188 @@ import cv2
 import numpy as np
 import time
 import datetime
-import os  # <--- NUEVO: Para verificar archivos
+import os
 import csv
 from ultralytics import YOLO
 from norfair import Detection, Tracker
 from utils import leer_timestamp, euclidean_distance
 
-# ======================
-# CONFIGURACIÓN
-# ======================
-VIDEO_PATH = "/home/adrian/Escritorio/Universidad/tesis/videos/videoIT/03-11-2025/lunes-03-11.avi"
-START_TIME = "2025-11-03T08:24:53"
-CSV_NAME = "resultados_videoIT_03-11.csv"
-DIRECCION = 4
-DIA_SEMANA = 1 # 0=Domingo, 1=Lunes, ..., 6=Sábado
 
+VIDEO_PATH = "/home/adrian/Escritorio/Universidad/tesis/videos/videoJP2/12-11-2025/miercoles-12-11-opt.avi"
+
+START_TIME = "2025-11-12T07:45:18"
+CSV_NAME = "resultados_videoJP2_12-11.csv"
+DIRECCION = 2
+DIA_SEMANA = 3  
+
+# Tiempos del semáforo
 GREEN_DURATION = 33    # segundos
 RED_DURATION = 118     # segundos totales de rojo
-RED_BUFFER = 3         # Segundos de antelación
-                       # Salto = 118 - 3 = 115 segundos.
+RED_BUFFER = 7         # Margen de seguridad antes de terminar el rojo
 
-TARGET_CLASSES = {"car", "truck"}
+# Coordenadas (Ajusta según tu calibración)
+PX1, PY1, PX2, PY2 = 200, 320, 1100, 440
+
+lineal_start = (716, 37)
+lineal_end   =(871, 112)
+
+ROI = np.s_[PY1:PY2, PX1:PX2]
+
+TARGET_CLASSES = {"car", "truck", "bus"}
 
 # ======================
-# GESTIÓN DEL CSV (Header)
+# 2. PREPARACIÓN CSV Y ÁREA
 # ======================
-# Verificamos si el archivo existe. Si NO existe, lo creamos y ponemos encabezados.
 if not os.path.exists(CSV_NAME):
     with open(CSV_NAME, mode='w', newline='') as f:
         writer = csv.writer(f)
-        writer.writerow(["Total_Vehiculos", "Tiempo_Medio_s", "Ocupacion_%", "Hora_Inicio", "Hora_Fin", "Dia_Semana", "Direccion"])
-    print(f"📁 Archivo {CSV_NAME} creado con encabezados.")
-else:
-    print(f"📁 Archivo {CSV_NAME} detectado. Se añadirán nuevas filas.")
+        writer.writerow(["Total_Vehiculos", "Tiempo_Medio_s", "Ocupacion_Espacial_%", "Hora_Inicio", "Hora_Fin", "Dia_Semana", "Direccion"])
 
-# Configuración ROI
-PX1, PY1, PX2, PY2 = 0, 730, 1200, 890
-ROI = np.s_[PY1:PY2, PX1:PX2]
-
-# Línea inclinada (RELATIVA A LA ROI)
-lineal_start = (300, 59)
-lineal_end   = (0, 100)
+# CÁLCULO DEL ÁREA TOTAL DEL ROI (Para la ocupación espacial)
+ANCHO_ROI = PX2 - PX1
+ALTO_ROI = PY2 - PY1
+AREA_TOTAL_ROI = ANCHO_ROI * ALTO_ROI
+print(f"ℹ️ Área Total del ROI: {AREA_TOTAL_ROI} píxeles cuadrados.")
 
 # ======================
-# MODELO Y TRACKER
+# 3. FUNCIONES
 # ======================
-print("Cargando modelo YOLO...")
-model = YOLO("yolov8n.pt")
-tracker = Tracker(
-    distance_function=euclidean_distance,
-    distance_threshold=30
-)
+def get_frame_time(cap, fps):
+    frame_idx = cap.get(cv2.CAP_PROP_POS_FRAMES)
+    return leer_timestamp(frame_idx / fps, START_TIME)
 
-cap = cv2.VideoCapture(VIDEO_PATH)
-FPS = cap.get(cv2.CAP_PROP_FPS)
-TOTAL_FRAMES = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+def producto_cruz(o, a, b):
+    return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
 
-# ======================
-# ESTADO GLOBAL Y MÉTRICAS
-# ======================
-estado = "ESPERANDO"
-inicio_verde_time = None
-ciclo = 0
+def cruzo_linea_robusto(prev_pt, curr_pt, line_start, line_end):
+    """
+    Verifica intersección física y filtra por dirección.
+    """
+    p1, p2 = prev_pt, curr_pt
+    q1, q2 = line_start, line_end
 
-historial = {}
-contados = set()
+    d1 = producto_cruz(q1, q2, p1)
+    d2 = producto_cruz(q1, q2, p2)
+    d3 = producto_cruz(p1, p2, q1)
+    d4 = producto_cruz(p1, p2, q2)
 
-tiempos_cruce = []
-tiempo_ocupado = 0.0
-frame_anterior_con_auto = False
-ultimo_tiempo_frame = None
+    hay_interseccion = ((d1 > 0 and d2 < 0) or (d1 < 0 and d2 > 0)) and \
+                       ((d3 > 0 and d4 < 0) or (d3 < 0 and d4 > 0))
 
-# Variables para estimación de tiempo
-start_process_time = time.time()
+    if hay_interseccion:
+        # --- FILTRO DE DIRECCIÓN ---
+        # Si tus autos NO se cuentan, cambia '<' por '>' en la siguiente línea.
+        if d1 > 0: 
+            return True
+            
+    return False
 
-# ======================
-# FUNCIONES AUXILIARES
-# ======================
-
-def guardar_resultados_csv(total_vehiculos, tiempo_medio, ocupacion, hora_inicio, hora_fin, dia_semana, direccion):
-    # Usamos mode='a' (append) para agregar al final sin borrar lo anterior
+def guardar_resultados_csv(total, t_medio, ocupacion, h_ini, h_fin, dia, dir_v):
     with open(CSV_NAME, mode='a', newline='') as f:
         writer = csv.writer(f)
-        writer.writerow([
-            total_vehiculos, 
-            f"{tiempo_medio:.2f}", 
-            f"{ocupacion:.2f}", 
-            hora_inicio, 
-            hora_fin, 
-            dia_semana, 
-            direccion
-        ])
+        writer.writerow([total, f"{t_medio:.2f}", f"{ocupacion:.2f}", h_ini, h_fin, dia, dir_v])
     print("💾 Datos guardados en CSV.")
-
-def get_frame_time(cap):
-    frame_idx = cap.get(cv2.CAP_PROP_POS_FRAMES)
-    return leer_timestamp(frame_idx / FPS, START_TIME)
 
 def yolo_to_norfair(results):
     detections = []
     for r in results:
         for box in r.boxes:
             cls = int(box.cls[0])
-            if model.names[cls] not in TARGET_CLASSES:
-                continue
+            if model.names[cls] not in TARGET_CLASSES: continue
             x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()
             conf = float(box.conf[0])
-            cx = (x1 + x2) / 2
-            cy = (y1 + y2) / 2
-            detections.append(
-                Detection(points=np.array([cx, cy]), scores=np.array([conf]))
-            )
+            cx, cy = (x1 + x2) / 2, (y1 + y2) / 2
+            detections.append(Detection(points=np.array([cx, cy]), scores=np.array([conf])))
     return detections
 
-def side_of_line(p, a, b):
-    return (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0])
-
-def cruzo_linea_segmento(prev_pt, curr_pt, a, b, margen=5):
-    s1 = side_of_line(prev_pt, a, b)
-    s2 = side_of_line(curr_pt, a, b)
-    if s1 == 0 or s2 == 0: return False
-    return (s1 > margen and s2 < -margen) or (s1 < -margen and s2 > margen)
-
-def imprimir_y_guardar(ciclo, total, tiempos, ocupacion, t_inicio, t_fin):
-    # Calcular tiempo medio
-    if len(tiempos) > 1:
-        intervalos = [(tiempos[i] - tiempos[i - 1]).total_seconds() for i in range(1, len(tiempos))]
-        tiempo_medio = sum(intervalos) / len(intervalos)
-    else:
-        tiempo_medio = 0.0
-    
-    # Imprimir en consola
-    print(f"\n✅ [RESULTADOS CICLO {ciclo}]")
-    print(f"   Vehículos: {total} | Ocupación: {ocupacion:.2f}% | Intervalo Medio: {tiempo_medio:.2f}s")
-    
-    # Preparar datos para CSV
-    # Asumimos que t_inicio y t_fin son objetos datetime
-    hora_ini_str = t_inicio.strftime("%H:%M:%S")
-    hora_fin_str = t_fin.strftime("%H:%M:%S")
-  
-
-    # Guardar en CSV
-    guardar_resultados_csv(
-        total_vehiculos=total,
-        tiempo_medio=tiempo_medio,
-        ocupacion=ocupacion,
-        hora_inicio=hora_ini_str,
-        hora_fin=hora_fin_str,
-        dia_semana=DIA_SEMANA,
-        direccion=DIRECCION
-    )
-
-def mostrar_progreso(frame_actual):
-    elapsed = time.time() - start_process_time
-    progreso = frame_actual / TOTAL_FRAMES
-    
+def mostrar_progreso(current_frame, total_frames, start_time, estado, ciclo):
+    elapsed = time.time() - start_time
+    progreso = current_frame / total_frames
     if progreso > 0:
-        total_estimado = elapsed / progreso
-        restante = total_estimado - elapsed
-        eta_str = str(datetime.timedelta(seconds=int(restante)))
+        eta = str(datetime.timedelta(seconds=int((elapsed / progreso) - elapsed)))
     else:
-        eta_str = "Calculando..."
-
-    progreso_pct = progreso * 100
-    print(f"\r⏳ Progreso: {progreso_pct:.2f}% | ETA: {eta_str} | Estado: {estado} | Ciclos: {ciclo}", end="")
+        eta = "..."
+    print(f"\r⏳ Progreso: {progreso*100:.2f}% | ETA: {eta} | Estado: {estado} | Ciclos: {ciclo}", end="")
 
 # ======================
-# LOOP PRINCIPAL (HEADLESS)
+# 4. INICIALIZACIÓN
 # ======================
-print(f"Iniciando procesamiento rápido. Video: {TOTAL_FRAMES} frames.")
+print("Cargando modelo YOLO...")
+model = YOLO("yolov8n.pt")
+tracker = Tracker(distance_function=euclidean_distance, distance_threshold=30)
+
+cap = cv2.VideoCapture(VIDEO_PATH)
+if not cap.isOpened():
+    print("Error al abrir video")
+    exit()
+
+FPS = cap.get(cv2.CAP_PROP_FPS)
+TOTAL_FRAMES = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+# Variables de Estado Global
+estado = "ESPERANDO"
+inicio_verde_time = None
+ciclo = 0
+
+historial = {}
+contados = set()
+tiempos_cruce = []
+
+# VARIABLES NUEVAS PARA OCUPACIÓN ESPACIAL
+acumulador_porcentaje_ocupacion = 0.0
+contador_frames_verde = 0
+
+start_process_time = time.time()
+
+# ======================
+# 5. LOOP PRINCIPAL
+# ======================
+print(f"🚀 Iniciando procesamiento. Video: {TOTAL_FRAMES} frames.")
 
 while True:
     ret, frame_full = cap.read()
-    if not ret:
-        break
+    if not ret: break
 
     current_frame_idx = cap.get(cv2.CAP_PROP_POS_FRAMES)
-    frame_time = get_frame_time(cap)
+    frame_time = get_frame_time(cap, FPS)
     
-    # Recorte ROI
+    # Recorte
     frame = frame_full[ROI]
 
-    # YOLO & Tracker (Sin verbose para no llenar consola)
+    # Inferencia
     results = model(frame, verbose=False)
+    
+    # --- CÁLCULO DE OCUPACIÓN ESPACIAL (FRAME ACTUAL) ---
+    area_ocupada_frame_actual = 0
+    
+    # Iteramos sobre las cajas de YOLO directamente para obtener dimensiones
+    for r in results:
+        for box in r.boxes:
+            cls = int(box.cls[0])
+            if model.names[cls] not in TARGET_CLASSES: continue
+            
+            x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()
+            w = x2 - x1
+            h = y2 - y1
+            area_ocupada_frame_actual += (w * h)
+    
+    # Si estamos en verde, acumulamos el % de este frame
+    if estado == "VERDE":
+        pct_frame = (area_ocupada_frame_actual / AREA_TOTAL_ROI) * 100
+        if pct_frame > 100: pct_frame = 100.0 # Capar al 100%
+        
+        acumulador_porcentaje_ocupacion += pct_frame
+        contador_frames_verde += 1
+
+    # Tracking y Conteo
     detections = yolo_to_norfair(results)
     tracked_objects = tracker.update(detections=detections)
 
     hubo_cruce = False
-    hay_auto_en_frame = False
 
     for obj in tracked_objects:
         cx, cy = obj.estimate[0]
         track_id = obj.id
-        hay_auto_en_frame = True
 
         if track_id not in historial:
             historial[track_id] = (cx, cy)
@@ -203,8 +192,8 @@ while True:
         prev_pt = historial[track_id]
         curr_pt = (cx, cy)
 
-        # Detectar cruce
-        if cruzo_linea_segmento(prev_pt, curr_pt, lineal_start, lineal_end):
+        # Usamos la función robusta
+        if cruzo_linea_robusto(prev_pt, curr_pt, lineal_start, lineal_end):
             hubo_cruce = True
             if estado == "VERDE" and track_id not in contados:
                 contados.add(track_id)
@@ -212,17 +201,8 @@ while True:
 
         historial[track_id] = (cx, cy)
 
-    # Lógica Ocupación
-    if estado == "VERDE" and ultimo_tiempo_frame is not None:
-        delta = (frame_time - ultimo_tiempo_frame).total_seconds()
-        if delta < 1.0 and frame_anterior_con_auto:
-            tiempo_ocupado += delta
-
-    frame_anterior_con_auto = hay_auto_en_frame
-    ultimo_tiempo_frame = frame_time
-
     # ======================
-    # LÓGICA DE ESTADOS
+    # LÓGICA DE ESTADOS (SEMÁFORO)
     # ======================
     if estado == "ESPERANDO" and hubo_cruce:
         estado = "VERDE"
@@ -230,39 +210,58 @@ while True:
         ciclo += 1
         contados.clear()
         tiempos_cruce.clear()
-        tiempo_ocupado = 0.0
-        print("\n🟢 Semáforo VERDE - Iniciando conteo...")
+        
+        # Reseteamos métricas de ocupación para el nuevo ciclo
+        acumulador_porcentaje_ocupacion = 0.0
+        contador_frames_verde = 0
+        
+        print(f"\n🟢 [Ciclo {ciclo}] Iniciando VERDE en {frame_time}")
 
     elif estado == "VERDE":
         if (frame_time - inicio_verde_time).total_seconds() >= GREEN_DURATION:
-            ocupacion = (tiempo_ocupado / GREEN_DURATION) * 100
             
-            # --- MODIFICADO: Llamamos a la función que imprime Y guarda ---
-            imprimir_y_guardar(
-                ciclo=ciclo,
-                total=len(contados),
-                tiempos=tiempos_cruce,
-                ocupacion=ocupacion,
-                t_inicio=inicio_verde_time,
-                t_fin=frame_time
+            # --- CÁLCULO FINAL DE OCUPACIÓN DEL CICLO ---
+            if contador_frames_verde > 0:
+                ocupacion_final_promedio = acumulador_porcentaje_ocupacion / contador_frames_verde
+            else:
+                ocupacion_final_promedio = 0.0
+            
+            # Cálculo Tiempo Medio entre vehículos
+            t_medio = 0.0
+            if len(tiempos_cruce) > 1:
+                intervalos = [(tiempos_cruce[i] - tiempos_cruce[i - 1]).total_seconds() for i in range(1, len(tiempos_cruce))]
+                t_medio = sum(intervalos) / len(intervalos)
+
+            # Imprimir y Guardar
+            print(f"✅ Fin VERDE. Vehículos: {len(contados)} | Ocupación Espacial: {ocupacion_final_promedio:.2f}%")
+            
+            guardar_resultados_csv(
+                len(contados), 
+                t_medio, 
+                ocupacion_final_promedio,
+                inicio_verde_time.strftime("%H:%M:%S"),
+                frame_time.strftime("%H:%M:%S"),
+                DIA_SEMANA,
+                DIRECCION
             )
 
             # Salto temporal
             segundos_a_saltar = max(0, RED_DURATION - RED_BUFFER)
             frames_saltar = int(segundos_a_saltar * FPS)
             
-            print(f"🔴 Fin VERDE. Saltando {segundos_a_saltar}s de video...")
-            
             cap.set(cv2.CAP_PROP_POS_FRAMES, cap.get(cv2.CAP_PROP_POS_FRAMES) + frames_saltar)
 
             estado = "ESPERANDO"
             historial.clear()
-            ultimo_tiempo_frame = None
+            
+            # Resetear variables de ocupación
+            acumulador_porcentaje_ocupacion = 0.0
+            contador_frames_verde = 0
             continue
 
-    # Mostrar progreso cada 30 frames para no saturar consola
+    # UI Consola
     if int(current_frame_idx) % 30 == 0:
-        mostrar_progreso(current_frame_idx)
+        mostrar_progreso(current_frame_idx, TOTAL_FRAMES, start_process_time, estado, ciclo)
 
-print("\n\n✅ Procesamiento finalizado correctamente.")
 cap.release()
+print("\n\n✅ Procesamiento finalizado.")
