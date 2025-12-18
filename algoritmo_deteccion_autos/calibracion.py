@@ -7,12 +7,12 @@ from utils import euclidean_distance
 # ======================
 # 1. CONFIGURACIÓN
 # ======================
-VIDEO_PATH = "/home/adrian/Escritorio/Universidad/tesis/videos/videoJP2/12-11-2025/miercoles-12-11-opt1.avi"
+VIDEO_PATH = "/home/adrian/Escritorio/Universidad/tesis/videos/videoJP2/12-11-2025/miercoles-12-11-opt2.avi"
 
-PX1, PY1, PX2, PY2 = 200, 320, 1100, 440
+PX1, PY1, PX2, PY2 = 200, 300, 1100, 400
 
-lineal_start = (701, 30)
-lineal_end   =(871, 112)
+lineal_start = (691, 23)
+lineal_end   =(892, 108)
 
 TARGET_CLASSES = {"car", "truck"}
 
@@ -76,7 +76,7 @@ def yolo_to_norfair(results, model):
 # ======================
 print("--- MODO CALIBRACIÓN (SIN FILTRO DE DIRECCIÓN) ---")
 
-model = YOLO("yolov8n.pt")
+model = YOLO("yolov8m.pt")
 tracker = Tracker(distance_function=euclidean_distance, distance_threshold=30)
 cap = cv2.VideoCapture(VIDEO_PATH)
 

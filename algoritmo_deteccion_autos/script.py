@@ -9,9 +9,9 @@ from norfair import Detection, Tracker
 from utils import leer_timestamp, euclidean_distance
 
 
-VIDEO_PATH = "/home/adrian/Escritorio/Universidad/tesis/videos/videoJP2/12-11-2025/miercoles-12-11-opt.avi"
+VIDEO_PATH = "/home/adrian/Escritorio/Universidad/tesis/videos/videoJP2/12-11-2025/miercoles-12-11-opt2.avi"
+START_TIME = "2025-11-12T09:03:52"
 
-START_TIME = "2025-11-12T07:45:18"
 CSV_NAME = "resultados_videoJP2_12-11.csv"
 DIRECCION = 2
 DIA_SEMANA = 3  
@@ -24,9 +24,8 @@ RED_BUFFER = 7         # Margen de seguridad antes de terminar el rojo
 # Coordenadas (Ajusta según tu calibración)
 PX1, PY1, PX2, PY2 = 200, 320, 1100, 440
 
-lineal_start = (716, 37)
+lineal_start = (665, 14)
 lineal_end   =(871, 112)
-
 ROI = np.s_[PY1:PY2, PX1:PX2]
 
 TARGET_CLASSES = {"car", "truck", "bus"}
@@ -109,7 +108,7 @@ def mostrar_progreso(current_frame, total_frames, start_time, estado, ciclo):
 # 4. INICIALIZACIÓN
 # ======================
 print("Cargando modelo YOLO...")
-model = YOLO("yolov8n.pt")
+model = YOLO("yolov8s.pt")
 tracker = Tracker(distance_function=euclidean_distance, distance_threshold=30)
 
 cap = cv2.VideoCapture(VIDEO_PATH)
