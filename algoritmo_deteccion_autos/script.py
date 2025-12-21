@@ -9,36 +9,34 @@ from norfair import Detection, Tracker
 from utils import leer_timestamp, euclidean_distance
 
 
-VIDEO_PATH = "/home/adrian/Escritorio/Universidad/tesis/videos/videoJP2/12-11-2025/miercoles-12-11-opt2.avi"
-START_TIME = "2025-11-12T09:03:52"
+VIDEO_PATH = "../videos/videoIT/03-11-2025/lunes-03-11.avi"
 
-CSV_NAME = "resultados_videoJP2_12-11.csv"
-DIRECCION = 2
-DIA_SEMANA = 3  
+START_TIME = "2025-11-03T08:24:52"
+
+CSV_NAME = "resultados_videoIT_03-11.csv"
+DIRECCION = 4
+DIA_SEMANA = 1
 
 # Tiempos del semáforo
-GREEN_DURATION = 33    # segundos
-RED_DURATION = 118     # segundos totales de rojo
-RED_BUFFER = 7         # Margen de seguridad antes de terminar el rojo
+GREEN_DURATION = 33    
+RED_DURATION = 118     
+RED_BUFFER = 7        
 
-# Coordenadas (Ajusta según tu calibración)
-PX1, PY1, PX2, PY2 = 200, 320, 1100, 440
 
-lineal_start = (665, 14)
-lineal_end   =(871, 112)
+PX1, PY1, PX2, PY2 = 70, 760, 800, 860
+
+lineal_start = (214, 14)
+lineal_end   =(0, 82)
+
 ROI = np.s_[PY1:PY2, PX1:PX2]
 
 TARGET_CLASSES = {"car", "truck", "bus"}
 
-# ======================
-# 2. PREPARACIÓN CSV Y ÁREA
-# ======================
 if not os.path.exists(CSV_NAME):
     with open(CSV_NAME, mode='w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(["Total_Vehiculos", "Tiempo_Medio_s", "Ocupacion_Espacial_%", "Hora_Inicio", "Hora_Fin", "Dia_Semana", "Direccion"])
 
-# CÁLCULO DEL ÁREA TOTAL DEL ROI (Para la ocupación espacial)
 ANCHO_ROI = PX2 - PX1
 ALTO_ROI = PY2 - PY1
 AREA_TOTAL_ROI = ANCHO_ROI * ALTO_ROI
@@ -70,9 +68,7 @@ def cruzo_linea_robusto(prev_pt, curr_pt, line_start, line_end):
                        ((d3 > 0 and d4 < 0) or (d3 < 0 and d4 > 0))
 
     if hay_interseccion:
-        # --- FILTRO DE DIRECCIÓN ---
-        # Si tus autos NO se cuentan, cambia '<' por '>' en la siguiente línea.
-        if d1 > 0: 
+        if d1 < 0: 
             return True
             
     return False
