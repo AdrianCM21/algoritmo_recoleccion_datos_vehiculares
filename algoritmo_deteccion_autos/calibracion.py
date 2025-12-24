@@ -7,12 +7,13 @@ from utils import euclidean_distance
 # ======================
 # 1. CONFIGURACIÓN
 # ======================
-VIDEO_PATH = "/home/adrian/Escritorio/Universidad/tesis/videos/videoJP2/12-11-2025/miercoles-12-11-opt2.avi"
+VIDEO_PATH = "../videos/videoJP1/06-11-2025/jueves-06-11-opt.avi"
 
-PX1, PY1, PX2, PY2 = 200, 300, 1100, 400
+PX1, PY1, PX2, PY2 = 100, 500, 850, 600
 
-lineal_start = (691, 23)
-lineal_end   =(892, 108)
+lineal_start = (174, 11)
+lineal_end   = (0, 67)
+
 
 TARGET_CLASSES = {"car", "truck"}
 
@@ -51,7 +52,7 @@ def cruzo_linea_robusto(prev_pt, curr_pt, line_start, line_end):
         # Si tus autos correctos tienen d1 POSITIVO, usa:  if d1 > 0:
         # Si tus autos correctos tienen d1 NEGATIVO, usa:  if d1 < 0:
         
-        if d1 > 0:  # <--- PRUEBA CAMBIANDO ESTO A '>' SI NO CUENTA NADA
+        if d1 < 0:  # <--- PRUEBA CAMBIANDO ESTO A '>' SI NO CUENTA NADA
             print(f"✅ Cruce VÁLIDO (Dir. Correcta). Valor d1: {d1}")
             return True
         else:
@@ -76,7 +77,7 @@ def yolo_to_norfair(results, model):
 # ======================
 print("--- MODO CALIBRACIÓN (SIN FILTRO DE DIRECCIÓN) ---")
 
-model = YOLO("yolov8m.pt")
+model = YOLO("yolov8n.pt")
 tracker = Tracker(distance_function=euclidean_distance, distance_threshold=30)
 cap = cv2.VideoCapture(VIDEO_PATH)
 

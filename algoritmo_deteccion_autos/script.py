@@ -9,24 +9,23 @@ from norfair import Detection, Tracker
 from utils import leer_timestamp, euclidean_distance
 
 
-VIDEO_PATH = "../videos/videoIT/03-11-2025/lunes-03-11.avi"
+VIDEO_PATH = "../videos/videoJP1/06-11-2025/jueves-06-11-opt.avi"
 
-START_TIME = "2025-11-03T08:24:52"
+START_TIME = "2025-11-06T08:27:16"
 
 CSV_NAME = "resultados_videoIT_03-11.csv"
-DIRECCION = 4
-DIA_SEMANA = 1
+DIRECCION = 1
+DIA_SEMANA = 4
 
 # Tiempos del semáforo
 GREEN_DURATION = 33    
 RED_DURATION = 118     
 RED_BUFFER = 7        
 
+PX1, PY1, PX2, PY2 = 100, 500, 850, 600
 
-PX1, PY1, PX2, PY2 = 70, 760, 800, 860
-
-lineal_start = (214, 14)
-lineal_end   =(0, 82)
+lineal_start = (174, 11)
+lineal_end   = (0, 67)
 
 ROI = np.s_[PY1:PY2, PX1:PX2]
 
