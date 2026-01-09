@@ -13,7 +13,7 @@
   - **Direccion**: Carril evaluado.
 - Los datos están sincronizados. Por ejemplo, si en el día 1, en la dirección 1, el ciclo semafórico termina a las 08:10:00, en la dirección 2 el ciclo comenzará a las 08:10:05, respetando los ciclos definidos en los semáforos reales. Esto se logró gracias a la constante sincronización del tiempo en los equipos de recolección.
 
-# Datos por dirección
+### Datos por dirección
 
 1. **Dirección 1**: Japón → camino al circuito  
 2. **Dirección 2**: Japón → camino al centro  
