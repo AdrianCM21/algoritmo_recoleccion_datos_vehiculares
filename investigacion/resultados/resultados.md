@@ -7,7 +7,23 @@
 
 ## Análisis del dataset completo
 
-### Distribucion del dataset 
+### Distribución del dataset original
+
+- Las filas representan ciclos semafóricos, los cuales constan de 33 segundos de luz verde más luz amarilla, período durante el cual los vehículos pueden circular.
+- Cada fila contiene:
+  - **Total_vehiculo**: Número total de vehículos en ese ciclo.
+  - **Tiempo_Medio_s**: Tiempo promedio en el que se detectan los vehículos. Por ejemplo, si se detecta un vehículo cada 1 segundo, significa que los vehículos pasan muy próximos entre sí.
+  - **Ocupacion_Espacial**: Porcentaje de ocupación de la vía.
+  - **Hora_Inicio**: Hora en la que inicia el ciclo (luz verde).
+  - **Hora_Fin**: Hora en la que finaliza el ciclo (cuando la luz se pone en rojo).
+  - **Dia_Semana**: Día de la semana en formato numérico (lunes = 1).
+  - **Direccion**: Carril evaluado.
+- Los datos están sincronizados. Por ejemplo, si en el día 1, en la dirección 1, el ciclo semafórico termina a las 08:10:00, en la dirección 2 el ciclo comenzará a las 08:10:05, respetando los ciclos definidos en los semáforos reales. Esto se logró gracias a la constante sincronización del tiempo en los equipos de recolección.
+
+
+### Distribucion del dataset ya etiquetado
+
+Como nuestro princil fuente de informacion es el dataset original se procuro de gran manera que los datos reflejen la realizad del campo estudiado.
 
 Se procede a mostrar 
 
@@ -17,8 +33,9 @@ Se procede a mostrar
 
 ![alt text](image/distribucion_dataset.png)
 
-#### Conclucion
------- Falta ------
+#### Analisis
+
+Se puede denotar que el trafijo en gran parte del periodo estudiado fue un trafico fluido que se vuelve pesaso en horarios picos como observaremos en la seccion del analisis por hora.
 
 ---
 
@@ -66,20 +83,50 @@ La distribucion de la etiquetas encontradas con la tecnica de cluster, en las di
 
 ![image.png](image/distribucion_dataset_dia_direccion.png)
 
-#### Analisis 
------- falta ------
+#### Análisis
+
+- **Día lunes 03-11-2025:**
+  - **Direcciones 1 y 2:** Se observa que el tráfico predominante es el etiquetado como fluido.
+  - **Direcciones 3 y 4:** El tránsito es más pesado.
+
+- **Día martes 11-11-2025:**
+  - **Dirección 2:** Se observa un leve aumento del tránsito pesado con respecto a lo obtenido en el día 1.
+  - **Direcciones 3 y 4:** Se mantiene una proporción similar al día 1, donde predomina el tránsito pesado.
+
+- **Día miércoles 12-11-2025:**
+  - **Direcciones 1 y 2:** Se mantiene una proporción similar a los días 1 y 2, lo que sugiere la existencia de un patrón.
+  - **Dirección 3:** Se nota un aumento del tráfico fluido.
+  - **Dirección 4:** Se mantiene similar a los días 1, 2 y 3.
+
+- **Día jueves 06-11-2025:**
+  - **Direcciones 1 y 2:** Se observa un aumento considerable del tráfico pesado con respecto a los días 1, 2 y 3.
+  - **Direcciones 3 y 4:** Mantienen valores similares a los días anteriores.
+
+- **Día viernes 14-11-2025:**
+  - **Direcciones 1 y 2:** Se mantiene la proporción observada en los días 1, 2 y 3.
+  - **Direcciones 3 y 4:** Presentan un cambio significativo en comparación con los días anteriores, donde se observa por primera vez que el tráfico fluido supera al tráfico pesado.
+
+
+**Conclusiones**
+Intuyo que la concentracion de puestos de trabajo en la zona del circuito y que la calle iturbe conecta con la calle de la costanera que tiene asu vez acceso a las calles principales del centro de encarnacion ayuda a esta carga notable en direccion 3 y 4.
 
 #### Distribucion cluster por dia y direccion
 
-**Direccion**
+**Dirección**
 
-**Cluster de las cuatro direcciones**
+Se muestra la distribución de los clusters en las cuatro direcciones y sus centroides.
+
+**Clusters de las cuatro direcciones**
 
 ![img cluster](image/distribucion_cluster_4dir.png)
 
 **Centroides de las cuatro direcciones**
 
 ![img centroide](image/centroide_4dir.png)
+
+**Análisis**
+
+Se puede observar que el patrón se mantiene en las cuatro direcciones, sin notarse diferencias significativas en ninguna de ellas.
 
 **Dia**
 
@@ -95,11 +142,13 @@ La distribucion de la etiquetas encontradas con la tecnica de cluster, en las di
 
 ### Distribucion de los datos por dia, hora y direccion
 
-Se muestra una imagen correspondiente al ida y en los pixeles se puede ver las direcciones, el tamaño de los pixeles es de 10 minutos.
+Se muestra una imagen correspondiente al dia y en los pixeles se puede ver las direcciones, el tamaño de los pixeles es de 10 minutos.
 
 **1. Dia lunes 03-11-2025**
 
 ![image.png](image/dataset_dia_direccion_hora_03-11.png)
+
+--Analisis:--
 
 **2. Dia martes 11-11-2025**
 
