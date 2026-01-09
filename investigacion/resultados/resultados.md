@@ -94,6 +94,7 @@ En este cluster se observa un tráfico moderado, con menos vehículos que el Clu
 Este cluster representa tráfico ligero. La cantidad de vehículos es baja, el tiempo medio entre ellos es alto, y la ocupación del carril es mínima. Se corresponde a periodos de baja densidad de tráfico, donde los vehículos circulan con amplio espacio.
 
 Distrubucion grafica de los datos
-![image.png](attachment:image.png)
+
+![image.png](./image/distribucion_dataset_completo.png)
 
 ---
