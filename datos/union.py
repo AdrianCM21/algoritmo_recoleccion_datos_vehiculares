@@ -1,9 +1,5 @@
 import pandas as pd
 
-# =========================
-# 1. CONFIGURACIÓN
-# =========================
-
 archivos_csv = [
     "jueves-06-11.csv",
     "lunes-03-11.csv",
@@ -22,10 +18,6 @@ columnas_seleccionadas = [
     "Direccion",
 ]
 
-# =========================
-# 2. LECTURA Y PROCESAMIENTO
-# =========================
-
 lista = []
 
 for archivo in archivos_csv:
@@ -38,15 +30,10 @@ for archivo in archivos_csv:
             f"El archivo {archivo} no tiene las columnas: {columnas_faltantes}"
         )
 
-    # Seleccionar solo las columnas necesarias
     df = df[columnas_seleccionadas]
 
-    # Filtrar por dirección (forma correcta)
     lista.append(df)
 
-# =========================
-# 3. CONCATENACIÓN FINAL
-# =========================
 
 df_dia_1 = pd.concat(lista, ignore_index=True)
 
