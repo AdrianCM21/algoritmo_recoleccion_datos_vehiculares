@@ -22,47 +22,6 @@ Se procede a mostrar
 
 ---
 
-### Distribucion de los datos por dia y direccion
-
-Se procede a mostrar
-
-La distribucion de la etiquetas encontradas con la tecnica de cluster, en las diferentes secciones y dias 
-
-![image.png](image/distribucion_dataset_dia_direccion.png)
-
-#### Conclucion
------- falta ------
-
----
-
-### Distribucion de los datos por dia, hora y direccion
-
-Se muestra una imagen correspondiente al ida y en los pixeles se puede ver las direcciones, el tamaño de los pixeles es de 10 minutos.
-
-**1. Dia lunes 03-11-2025**
-
-![image.png](image/dataset_dia_direccion_hora_03-11.png)
-
-**2. Dia martes 11-11-2025**
-
-![image.png](image/dataset_dia_direccion_hora_11-11.png)
-
-**3. Dia miercoles 12-11-2025**
-
-![image.png](image/dataset_dia_direccion_hora_12-11.png)
-
-
-**4. Dia juevez 06-11-2025**
-
-![image.png](image/dataset_dia_direccion_hora_06-11.png)
-
-**5. Dia viernes 14-11-2025**
-
-![image.png](image/dataset_dia_direccion_hora_14-11.png)
-
-
-
-
 ### Análisis de los 3 grupos
 
 Centroide de cada grupo
@@ -93,8 +52,70 @@ En este cluster se observa un tráfico moderado, con menos vehículos que el Clu
 
 Este cluster representa tráfico ligero. La cantidad de vehículos es baja, el tiempo medio entre ellos es alto, y la ocupación del carril es mínima. Se corresponde a periodos de baja densidad de tráfico, donde los vehículos circulan con amplio espacio.
 
-Distrubucion grafica de los datos
+**Distribucion de los cluster** 
 
 ![image.png](./image/distribucion_dataset_completo.png)
 
 ---
+
+### Distribucion de los datos por dia y direccion
+
+Se procede a mostrar
+
+La distribucion de la etiquetas encontradas con la tecnica de cluster, en las diferentes secciones y dias 
+
+![image.png](image/distribucion_dataset_dia_direccion.png)
+
+#### Analisis 
+------ falta ------
+
+#### Distribucion cluster por dia y direccion
+
+**Direccion**
+
+**Cluster de las cuatro direcciones**
+
+![img cluster](image/distribucion_cluster_4dir.png)
+
+**Centroides de las cuatro direcciones**
+
+![img centroide](image/centroide_4dir.png)
+
+**Dia**
+
+**Cluster de los cinco dias**
+
+![img cluster](image/distribucion_cluster_5dias.png)
+
+**Centroides de los cinco dias**
+
+![img centroide](image/centroide_5dias.png)
+
+---
+
+### Distribucion de los datos por dia, hora y direccion
+
+Se muestra una imagen correspondiente al ida y en los pixeles se puede ver las direcciones, el tamaño de los pixeles es de 10 minutos.
+
+**1. Dia lunes 03-11-2025**
+
+![image.png](image/dataset_dia_direccion_hora_03-11.png)
+
+**2. Dia martes 11-11-2025**
+
+![image.png](image/dataset_dia_direccion_hora_11-11.png)
+
+**3. Dia miercoles 12-11-2025**
+
+![image.png](image/dataset_dia_direccion_hora_12-11.png)
+
+
+**4. Dia juevez 06-11-2025**
+
+![image.png](image/dataset_dia_direccion_hora_06-11.png)
+
+**5. Dia viernes 14-11-2025**
+
+![image.png](image/dataset_dia_direccion_hora_14-11.png)
+
+
