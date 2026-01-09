@@ -134,6 +134,8 @@ Se puede observar que el patrón se mantiene en las cuatro direcciones, sin nota
 
 ![img cluster](image/distribucion_cluster_5dias.png)
 
+Analisis:
+
 **Centroides de los cinco dias**
 
 ![img centroide](image/centroide_5dias.png)
@@ -148,23 +150,48 @@ Se muestra una imagen correspondiente al dia y en los pixeles se puede ver las d
 
 ![image.png](image/dataset_dia_direccion_hora_03-11.png)
 
---Analisis:--
+Analisis
+- **Dirección 1:** Recuperación rápida; inicia saturada pero desde las 08:30 se denota el tráfico fluido casi sin interrupciones.
+
+- **Dirección 2:** Inestable; alterna constantemente entre saturado y fluido, con un bloque crítico de congestión a media mañana.
+
+- **Direcciones 3 y 4:** Críticas; el tráfico pesado es dominante durante toda la jornada, con ventanas de fluidez casi inexistentes.
 
 **2. Dia martes 11-11-2025**
 
 ![image.png](image/dataset_dia_direccion_hora_11-11.png)
 
+Analisis
+- **Dirección 1:** Alta estabilidad; salvo el inicio de jornada, mantiene un flujo continuo ( verde ) superior al del lunes.
+
+- **Dirección 2:** Muy intermitente; intercala saturación y fluidez.
+
+- **Direcciones 3 y 4:** Se mantiene constantemete saturado, intensificándose el color rojo entre las 12:30 y 14:00.
+
 **3. Dia miercoles 12-11-2025**
 
 ![image.png](image/dataset_dia_direccion_hora_12-11.png)
+Analisis
+- **Dirección 1:** Óptimo desempeño; es el día con mayor proporción de tráfico fluido para esta dirección.
 
+- **Dirección 2:** Los intervalos fluidos son más extensos que en días anteriores.
+
+- **Direcciones 3 y 4:** Significativos respecto al lunes y martes.
 
 **4. Dia juevez 06-11-2025**
 
 ![image.png](image/dataset_dia_direccion_hora_06-11.png)
+Analisis
+- **Dirección 1:** Se presentan extensos bloques de saturación dispersos durante toda la mañana y mediodía.
+
+- **Dirección 2:** Congestión severa; empeora respecto al miércoles, con predominancia de rojo.
+
+- **Direcciones 3 y 4:** Mantienen la tendencia de saturación total observada en el resto de la semana.
 
 **5. Dia viernes 14-11-2025**
 
 ![image.png](image/dataset_dia_direccion_hora_14-11.png)
+Analisis
+- **Direcciones 1 y 2:** Comportamiento estándar; mantienen un flujo mayoritariamente fluido, similar al promedio de lunes-miércoles.
 
-
+- **Direcciones 3 y 4:** Inversión de patrón; se observa un cambio drástico positivo. A diferencia de los otros días, aparecen extensos bloques de tráfico fluido (verde).
