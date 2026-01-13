@@ -226,7 +226,7 @@ A continuación se detallan los tiempos propuestos por el algoritmo desarrollado
 | Dirección | Propuesta (s) | Diferencia con anterior |
 | :--- | :--- | :--- |
 | `Dirección 1` | 26 | -7 s (-24.2%) |
-| `Dirección 2` | 26 | -7 s (-21.2%) |
+| `Dirección 2` | 26 | -7 s (-24.2%) |
 | `Dirección 3` | 32 | -1 s (-3.0%) |
 | `Dirección 4` | 27 | -6 s (-18.2%) |
 
