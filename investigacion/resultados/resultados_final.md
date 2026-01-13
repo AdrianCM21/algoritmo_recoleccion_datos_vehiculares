@@ -168,13 +168,11 @@ El PSO busca el valor ideal dentro de estos rangos y estos son los resultados ob
 
 | Hiperparámetro | Resultado | Descripción |
 | :--- | :--- | :--- |
-| `n_estimators` | 291 | Cantidad de árboles que componen el bosque. |
-| `max_depth` | 13 | Profundidad máxima de cada árbol (controla la complejidad del modelo). |
-| `min_samples_split` | 2 | Número mínimo de muestras necesarias para dividir un nodo interno. |
+| `n_estimators` | 180 | Cantidad de árboles que componen el bosque. |
+| `max_depth` | 21 | Profundidad máxima de cada árbol (controla la complejidad del modelo). |
+| `min_samples_split` | 5 | Número mínimo de muestras necesarias para dividir un nodo interno. |
 | `min_samples_leaf` | 1 | Número mínimo de muestras que debe contener una hoja terminal. |
-| `max_features` | 0.7 | Proporción de variables consideradas en cada división del árbol. |
-| `min_impurity_decrease` | 0.002 | Umbral mínimo de reducción de impureza requerido para realizar una división. |
-| `max_samples` | 0.8 | Proporción de muestras utilizadas para entrenar cada árbol del bosque. |
+| `max_features` | log2 | Proporción de variables consideradas en cada división del árbol. |
 | `random_state` | 42 | Asegura que los resultados del entrenamiento sean reproducibles. |
 | `n_jobs` | -1 | Utiliza todos los núcleos del procesador disponibles para acelerar el entrenamiento. |
 
@@ -199,22 +197,27 @@ Para saber qué tan bueno es nuestro modelo base, comparamos sus predicciones co
 #### Resultados de las métricas de evaluación
 
 ```
-MAE: 0.021 segundos
-RMSE: 0.040 segundos
-R²: 99.22
+MAE: 0.51 segundos
+RMSE: 0.75 segundos
+R²: 0.9885
 ```
 
-- **MAE:** 0.021 segundos  
+- **MAE:** 0.51 segundos  
 
-En promedio, el modelo se equivoca por **0.021 segundos**, es excelente, es un error mínimo.
+En promedio, el modelo se equivoca por **0.51 segundos**, es excelente, es un error mínimo.
 
-- **RMSE:** 0.040 segundos  
+- **RMSE:** 0.75 segundos  
 
 El RMSE es más alto que el MAE, lo que indica que hay algunos errores más grandes ocasionales; sigue siendo muy bajo y confirma alta precisión.
 
-- **R²:** 99.22  
+- **R²:** 0.98 
 
-El modelo explica el **99.22% de la variabilidad** en los datos, es casi perfecto.
+El modelo explica el **98% de la variabilidad** en los datos, es casi perfecto.
+
+- **MAPE:** 1.72%
+
+Esto indica que el algoritmo tiende a fallar poco.
+
 
 
 ## Resultados Optenidos
@@ -223,7 +226,10 @@ A continuación se detallan los tiempos propuestos por el algoritmo desarrollado
 
 | Dirección | Propuesta (s) | Diferencia con anterior |
 | :--- | :--- | :--- |
-| `Dirección 1` | 25 | -8 s (-24.2%) |
+| `Dirección 1` | 26 | -7 s (-24.2%) |
 | `Dirección 2` | 26 | -7 s (-21.2%) |
 | `Dirección 3` | 32 | -1 s (-3.0%) |
 | `Dirección 4` | 27 | -6 s (-18.2%) |
+
+*Anterior mente estaba definido en 33 segundos*
+
