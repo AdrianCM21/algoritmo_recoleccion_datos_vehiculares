@@ -18,9 +18,7 @@ Dependiendo del nivel de tráfico (**Cluster**), se elige un nivel de confianza 
 *¿Por qué no usamos, por ejemplo, el percentil 100%? Porque podría corresponder a un dato anómalo; por ejemplo, un pico de 30 vehículos cuando el 95% de las veces el flujo es de 14.*
 
 **Fórmula:**  
-$$
-T_{base} = \text{Vehículos detectados} \times \text{Tiempo promedio por vehículo}
-$$
+> **T_base** = Vehículos detectados * Tiempo promedio vehículo
 
 **Paso 2: Aplicar Ajustes y Límites**
 
@@ -29,9 +27,7 @@ Al tiempo base se le suma un **margen de seguridad de 3 segundos**. El resultado
 *Esto se aplica por estándares: si es menor a 20 s, sería muy poco tiempo para un semáforo; si supera los 60 s, el tiempo de espera para las otras direcciones sería excesivo.*
 
 **Fórmula Compacta:**  
-$$
-T_{óptimo} = \text{clip}(T_{base} + 3, [20, 60])
-$$
+> **T_óptimo** = clip( **T_base** + 3, [20, 60] )
 
 ---
 
@@ -43,9 +39,9 @@ Si tenemos los siguientes datos en una zona de **Tráfico Pesado (C=0)**:
 - **Tiempo entre autos:** 3.6 s  
 
 1. **Multiplicación:**  
-   $14.2 \times 3.6 = 51.12$ s  
+   >14.2 x 3.6 = 51.12 seg.
 2. **Suma de margen:**  
-   $51.12 + 3 = 54.12$ s  
+   >51.12 + 3 = 54.12 seg.  
 3. **Resultado:**  
    Como está en el rango [20, 60], el tiempo final es **54.12 s**.
 
@@ -80,14 +76,17 @@ Para que el algoritmo tenga memoria o contexto del ciclo anterior aprovechando l
 Introducimos conceptos de ingeniería de tráfico para evaluar el rendimiento del semáforo:
 
 - **Capacidad Teórica:** Define cuántos vehículos *podrían* pasar en el tiempo de verde asignado.  
-  $$
-  \text{Capacidad} = \frac{\text{Tiempo de Verde}}{\text{Tiempo Medio entre autos}}
-  $$
-- **Saturación Actual ($S$):** Relación entre los autos que hay y los que el semáforo puede manejar.  
-  $$
-  S = \frac{\text{Vehículos Observados}}{\text{Capacidad Teórica}}
-  $$
+### 3. Métricas de Eficiencia y Capacidad
 
+Introducimos conceptos de ingeniería de tráfico para evaluar el rendimiento del semáforo:
+
+- **Capacidad Teórica:** Define cuántos vehículos *podrían* pasar en el tiempo de verde asignado.  
+> **Capacidad** = Tiempo de Verde / Tiempo Medio entre autos
+
+
+
+- **Saturación Actual:** Es la relación entre los autos detectados y los que el semáforo realmente puede manejar.  
+> **Saturación** = Vehículos Observados / Capacidad Teórica
 ---
 
 ## Resumen de Nuevas Características
@@ -140,9 +139,9 @@ En esta sección realizamos una división de los datos por día de la semana de 
 
 | Conjunto | Propósito | Días Incluidos |
 | :--- | :--- | :--- |
-| **$X_{entreno}, y_{entreno}$** | Aprendizaje de patrones | Lunes, Martes y Viernes |
-| **$X_{val}, y_{val}$** | Ajuste y monitoreo | Miércoles |
-| **$X_{prueba}, y_{prueba}$** | Evaluación final (ciega) | Jueves |
+| **X_entreno, y_entreno** | Aprendizaje de patrones | Lunes, Martes y Viernes |
+| **X_val, y_val** | Ajuste y monitoreo | Miércoles |
+| **X_prueba, y_prueba** | Evaluación final (ciega) | Jueves |
 
 ---
 
