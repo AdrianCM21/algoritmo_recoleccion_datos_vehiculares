@@ -76,11 +76,6 @@ Para que el algoritmo tenga memoria o contexto del ciclo anterior aprovechando l
 Introducimos conceptos de ingeniería de tráfico para evaluar el rendimiento del semáforo:
 
 - **Capacidad Teórica:** Define cuántos vehículos *podrían* pasar en el tiempo de verde asignado.  
-### 3. Métricas de Eficiencia y Capacidad
-
-Introducimos conceptos de ingeniería de tráfico para evaluar el rendimiento del semáforo:
-
-- **Capacidad Teórica:** Define cuántos vehículos *podrían* pasar en el tiempo de verde asignado.  
 > **Capacidad** = Tiempo de Verde / Tiempo Medio entre autos
 
 
@@ -89,7 +84,7 @@ Introducimos conceptos de ingeniería de tráfico para evaluar el rendimiento de
 > **Saturación** = Vehículos Observados / Capacidad Teórica
 ---
 
-## Resumen de Nuevas Características
+### Resumen de Nuevas Características
 
 | Categoría     | Variables Generadas                                   | Propósito                              |
 |---------------|-------------------------------------------------------|----------------------------------------|
@@ -110,7 +105,7 @@ Al finalizar esta etapa, obtenemos un dataset enriquecido donde cada fila contie
 
 En esta fase, transformamos el dataset enriquecido en estructuras que el modelo de Machine Learning pueda procesar, asegurando una evaluación realista mediante una división temporal.
 
-### 1. Selección de variables a pasar al modelo
+### Selección de variables a pasar al modelo
 
 En esta etapa se suman las nuevas variables más las variables básicas y se pasan al modelo los siguientes datos que creemos que son de suma importancia:
 
@@ -125,36 +120,6 @@ En esta etapa se suman las nuevas variables más las variables básicas y se pas
 - Tendencias de tráfico  
 - Niveles de saturación
 
-### 2. Estrategia de División Temporal
-
-En esta sección realizamos una división de los datos por día de la semana de la siguiente manera:
-
-* **Entrenamiento:** Días Lunes, Martes y Viernes. Es la base de conocimiento del modelo.  
-* **Validación:** Día Miércoles. Se usa para ajustar los hiperparámetros y evitar el sobreajuste (overfitting).  
-* **Prueba:** Día Jueves. Datos que el modelo nunca ha visto, simulando su desempeño en un entorno real futuro.
-
----
-
-## Estructura de las Matrices
-
-| Conjunto | Propósito | Días Incluidos |
-| :--- | :--- | :--- |
-| **X_entreno, y_entreno** | Aprendizaje de patrones | Lunes, Martes y Viernes |
-| **X_val, y_val** | Ajuste y monitoreo | Miércoles |
-| **X_prueba, y_prueba** | Evaluación final (ciega) | Jueves |
-
----
-
-### Objetivo de la Fase
-
-Se garantiza que el modelo sea evaluado por su capacidad de **generalizar** el comportamiento del tráfico en días distintos a los de su entrenamiento.
-
-### Datos totales
-
-La distribución de los datos agregados es la siguiente:
-
-![image](image/entreno/proporcion_datos_entreno.png)
-
 ---
 
 ## Fase 4: Optimización con PSO
@@ -163,12 +128,18 @@ En esta fase, utilizaremos PSO para encontrar la configuración óptima y de mej
 
 ### Parámetros que estamos optimizando
 
-El PSO busca el valor ideal dentro de estos rangos y estos son los resultados obtenidos:
+**El PSO busca el valor ideal dentro de estos rangos**
+Configuración: 
+- Partículas: 20
+- Dimensiones: 5
+- Función objetivo: minimizar MSE en validación cruzada
+
+**Estos son los resultados obtenidos:**
 
 | Hiperparámetro | Resultado | Descripción |
 | :--- | :--- | :--- |
-| `n_estimators` | 180 | Cantidad de árboles que componen el bosque. |
-| `max_depth` | 21 | Profundidad máxima de cada árbol (controla la complejidad del modelo). |
+| `n_estimators` | 268 | Cantidad de árboles que componen el bosque. |
+| `max_depth` | 26 | Profundidad máxima de cada árbol (controla la complejidad del modelo). |
 | `min_samples_split` | 5 | Número mínimo de muestras necesarias para dividir un nodo interno. |
 | `min_samples_leaf` | 1 | Número mínimo de muestras que debe contener una hoja terminal. |
 | `max_features` | log2 | Proporción de variables consideradas en cada división del árbol. |
@@ -180,6 +151,34 @@ El PSO busca el valor ideal dentro de estos rangos y estos son los resultados ob
 ## FASE 5: Modelo Random Forest
 
 En esta fase implementamos nuestro modelo predictivo ya con la configuración obtenida con el PSO. Utilizamos el algoritmo Random Forest para establecer un punto de comparación inicial antes de aplicar otras optimizaciones.
+
+### 2. Estrategia de División Temporal
+
+Para validar el modelo, adoptamos una estrategia de Validación de Origen en Expansión (Walk-Forward acumulativo).
+
+Este método simula el ciclo de vida real de un sistema de tráfico inteligente: el modelo entrena con los datos históricos disponibles hasta hoy para predecir el mañana, acumulando conocimiento progresivamente.
+
+#### Metodología del Proceso
+El conjunto de datos se ordena cronológicamente (Lunes hasta viernes). En cada iteración, la ventana de entrenamiento crece, anclada en el inicio, mientras que la ventana de prueba siempre se sitúa inmediatamente después en el tiempo.
+
+1.  **Iteración 1:** El modelo aprende con el inicio de la semana (Lunes) y se evalúa con el día siguiente (Martes).
+2.  **Iteración 2:** El modelo re-entrena con lo que ya sabía más los nuevos datos (Lunes + Martes) y se evalúa con el siguiente (Miércoles).
+3.  **Iteración N:** El proceso se repite hasta cubrir toda la semana.
+
+---
+
+### Esquema de las Iteraciones de Validación
+
+A diferencia de tener un único set estático, evaluamos el rendimiento promedio a través de múltiples escenarios temporales:
+
+| Iteración | Conjunto de Entrenamiento (Historia Acumulada) | Conjunto de Prueba (Futuro Inmediato) | Objetivo de la Evaluación |
+| :--- | :--- | :--- | :--- |
+| **1** | **20%** (Lunes completo) | **20%** (Martes) | Evaluar aprendizaje inicial con un solo día base. |
+| **2** | **40%** (Lunes + Martes) | **20%** (Miércoles) | Medir la mejora al duplicar la experiencia del modelo. |
+| **3** | **60%** (Lun + Mar + Mié) | **20%** (Jueves) | Validar la consistencia a mitad de la semana. |
+| **4** | **80%** (Lun + Mar + Mié + Jue) | **20%** (Viernes) | **Prueba Final:** Predicción del comportamiento del último día hábil. |
+
+---
 
 ### Configuración del Modelo
 
@@ -196,16 +195,16 @@ Para saber qué tan bueno es nuestro modelo base, comparamos sus predicciones co
 #### Resultados de las métricas de evaluación
 
 ```
-MAE: 0.51 segundos
-RMSE: 0.75 segundos
-R²: 0.9885
+MAE: 0.57 segundos
+RMSE: 0.84 segundos
+R²: 0.98
 ```
 
-- **MAE:** 0.51 segundos  
+- **MAE:** 0.57 segundos  
 
-En promedio, el modelo se equivoca por **0.51 segundos**, es excelente, es un error mínimo.
+En promedio, el modelo se equivoca por **0.57 segundos**, es excelente, es un error mínimo.
 
-- **RMSE:** 0.75 segundos  
+- **RMSE:** 0.84 segundos  
 
 El RMSE es más alto que el MAE, lo que indica que hay algunos errores más grandes ocasionales; sigue siendo muy bajo y confirma alta precisión.
 
@@ -216,7 +215,6 @@ El modelo explica el **98% de la variabilidad** en los datos, es casi perfecto.
 - **MAPE:** 1.72%
 
 Esto indica que el algoritmo tiende a fallar poco.
-
 
 
 ## Resultados Optenidos
