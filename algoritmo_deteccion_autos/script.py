@@ -39,11 +39,10 @@ if not os.path.exists(CSV_NAME):
 ANCHO_ROI = PX2 - PX1
 ALTO_ROI = PY2 - PY1
 AREA_TOTAL_ROI = ANCHO_ROI * ALTO_ROI
-print(f"ℹ️ Área Total del ROI: {AREA_TOTAL_ROI} píxeles cuadrados.")
+print(f" Área Total del ROI: {AREA_TOTAL_ROI} píxeles cuadrados.")
 
-# ======================
-# 3. FUNCIONES
-# ======================
+#  FUNCIONES
+
 def get_frame_time(cap, fps):
     frame_idx = cap.get(cv2.CAP_PROP_POS_FRAMES)
     return leer_timestamp(frame_idx / fps, START_TIME)
@@ -76,7 +75,7 @@ def guardar_resultados_csv(total, t_medio, ocupacion, h_ini, h_fin, dia, dir_v):
     with open(CSV_NAME, mode='a', newline='') as f:
         writer = csv.writer(f)
         writer.writerow([total, f"{t_medio:.2f}", f"{ocupacion:.2f}", h_ini, h_fin, dia, dir_v])
-    print("💾 Datos guardados en CSV.")
+    print("Datos guardados en CSV.")
 
 def yolo_to_norfair(results):
     detections = []
@@ -97,11 +96,10 @@ def mostrar_progreso(current_frame, total_frames, start_time, estado, ciclo):
         eta = str(datetime.timedelta(seconds=int((elapsed / progreso) - elapsed)))
     else:
         eta = "..."
-    print(f"\r⏳ Progreso: {progreso*100:.2f}% | ETA: {eta} | Estado: {estado} | Ciclos: {ciclo}", end="")
+    print(f"\rProgreso: {progreso*100:.2f}% | ETA: {eta} | Estado: {estado} | Ciclos: {ciclo}", end="")
 
-# ======================
-# 4. INICIALIZACIÓN
-# ======================
+# INICIALIZACIÓN
+
 print("Cargando modelo YOLO...")
 model = YOLO("yolov8s.pt")
 tracker = Tracker(distance_function=euclidean_distance, distance_threshold=30)
@@ -129,10 +127,8 @@ contador_frames_verde = 0
 
 start_process_time = time.time()
 
-# ======================
-# 5. LOOP PRINCIPAL
-# ======================
-print(f"🚀 Iniciando procesamiento. Video: {TOTAL_FRAMES} frames.")
+# LOOP PRINCIPAL
+print(f"Iniciando procesamiento. Video: {TOTAL_FRAMES} frames.")
 
 while True:
     ret, frame_full = cap.read()
@@ -147,7 +143,7 @@ while True:
     # Inferencia
     results = model(frame, verbose=False)
     
-    # --- CÁLCULO DE OCUPACIÓN ESPACIAL (FRAME ACTUAL) ---
+    # CÁLCULO DE OCUPACIÓN ESPACIAL DEL FRAME ACTUAL
     area_ocupada_frame_actual = 0
     
     # Iteramos sobre las cajas de YOLO directamente para obtener dimensiones
@@ -161,7 +157,7 @@ while True:
             h = y2 - y1
             area_ocupada_frame_actual += (w * h)
     
-    # Si estamos en verde, acumulamos el % de este frame
+    # Si = verde, acumula el % de este frame
     if estado == "VERDE":
         pct_frame = (area_ocupada_frame_actual / AREA_TOTAL_ROI) * 100
         if pct_frame > 100: pct_frame = 100.0 # Capar al 100%
@@ -195,9 +191,8 @@ while True:
 
         historial[track_id] = (cx, cy)
 
-    # ======================
+    
     # LÓGICA DE ESTADOS (SEMÁFORO)
-    # ======================
     if estado == "ESPERANDO" and hubo_cruce:
         estado = "VERDE"
         inicio_verde_time = frame_time
@@ -209,12 +204,12 @@ while True:
         acumulador_porcentaje_ocupacion = 0.0
         contador_frames_verde = 0
         
-        print(f"\n🟢 [Ciclo {ciclo}] Iniciando VERDE en {frame_time}")
+        print(f"\n [Ciclo {ciclo}] Iniciando VERDE en {frame_time}")
 
     elif estado == "VERDE":
         if (frame_time - inicio_verde_time).total_seconds() >= GREEN_DURATION:
             
-            # --- CÁLCULO FINAL DE OCUPACIÓN DEL CICLO ---
+            # CÁLCULO FINAL DE OCUPACIÓN DEL CICLO 
             if contador_frames_verde > 0:
                 ocupacion_final_promedio = acumulador_porcentaje_ocupacion / contador_frames_verde
             else:
@@ -227,7 +222,7 @@ while True:
                 t_medio = sum(intervalos) / len(intervalos)
 
             # Imprimir y Guardar
-            print(f"✅ Fin VERDE. Vehículos: {len(contados)} | Ocupación Espacial: {ocupacion_final_promedio:.2f}%")
+            print(f"Fin VERDE. Vehículos: {len(contados)} | Ocupación Espacial: {ocupacion_final_promedio:.2f}%")
             
             guardar_resultados_csv(
                 len(contados), 
@@ -258,4 +253,4 @@ while True:
         mostrar_progreso(current_frame_idx, TOTAL_FRAMES, start_process_time, estado, ciclo)
 
 cap.release()
-print("\n\n✅ Procesamiento finalizado.")
+print("\n\n Procesamiento finalizado.")
