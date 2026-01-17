@@ -4,9 +4,7 @@ from ultralytics import YOLO
 from norfair import Detection, Tracker
 from utils import euclidean_distance 
 
-# ======================
-# 1. CONFIGURACIÓN
-# ======================
+# CONFIGURACIONES INICIALES
 VIDEO_PATH = "../videos/videoJP1/06-11-2025/jueves-06-11-opt.avi"
 
 PX1, PY1, PX2, PY2 = 100, 500, 850, 600
@@ -14,12 +12,10 @@ PX1, PY1, PX2, PY2 = 100, 500, 850, 600
 lineal_start = (174, 11)
 lineal_end   = (0, 67)
 
-
 TARGET_CLASSES = {"car", "truck"}
 
-# ======================
-# 2. FUNCIONES
-# ======================
+
+# FUNCIONES
 def click_event(event, x, y, flags, param):
     if event == cv2.EVENT_LBUTTONDOWN:
         print(f"({x}, {y})")
@@ -44,19 +40,14 @@ def cruzo_linea_robusto(prev_pt, curr_pt, line_start, line_end):
                        ((d3 > 0 and d4 < 0) or (d3 < 0 and d4 > 0))
 
     if hay_interseccion:
-        # ==========================================================
-        # 2. FILTRO DE DIRECCIÓN (Derecha a Izquierda)
-        # ==========================================================
+        # FILTRO DE DIRECCIÓN (Derecha a Izquierda)
+        # Configuración a tener en cuenta: Cambiar este símbolo según lo que aparece en el DEBUG. - Si los autos correctos tienen d1 POSITIVO, usar:  if d1 > 0:  - Si los autos correctos tienen d1 NEGATIVO, usar:  if d1 < 0:
         
-        # IMPORTANTE: Cambia este símbolo según lo que viste en tu DEBUG.
-        # Si tus autos correctos tienen d1 POSITIVO, usa:  if d1 > 0:
-        # Si tus autos correctos tienen d1 NEGATIVO, usa:  if d1 < 0:
-        
-        if d1 < 0:  # <--- PRUEBA CAMBIANDO ESTO A '>' SI NO CUENTA NADA
-            print(f"✅ Cruce VÁLIDO (Dir. Correcta). Valor d1: {d1}")
+        if d1 < 0:  
+            print(f"Cruce VÁLIDO (Dir. Correcta). Valor d1: {d1}")
             return True
         else:
-            print(f"⛔ Cruce IGNORADO (Dir. Incorrecta). Valor d1: {d1}")
+            print(f"Cruce IGNORADO (Dir. Incorrecta). Valor d1: {d1}")
             return False
 
     return False
@@ -72,17 +63,18 @@ def yolo_to_norfair(results, model):
             detections.append(Detection(points=np.array([cx, cy]), scores=np.array([conf])))
     return detections
 
-# ======================
-# 3. EJECUCIÓN
-# ======================
-print("--- MODO CALIBRACIÓN (SIN FILTRO DE DIRECCIÓN) ---")
+
+
+
+# EJECUCIÓN
+print("MODO CALIBRACIÓN (SIN FILTRO DE DIRECCIÓN)")
 
 model = YOLO("yolov8n.pt")
 tracker = Tracker(distance_function=euclidean_distance, distance_threshold=30)
 cap = cv2.VideoCapture(VIDEO_PATH)
 
 if not cap.isOpened():
-    print(f"❌ ERROR: No se pudo abrir el video en: {VIDEO_PATH}")
+    print(f"ERROR: No se pudo abrir el video en: {VIDEO_PATH}")
     exit()
 
 ret, frame_full = cap.read()
@@ -94,10 +86,10 @@ roi_test = frame_full[ROI]
 uso_roi = True
 
 if roi_test.size == 0:
-    print(f"⚠️ ROI INVÁLIDO. Usando pantalla completa.")
+    print(f"ROI INVÁLIDO. Usando pantalla completa.")
     uso_roi = False
 else:
-    print("✅ ROI válido.")
+    print("ROI válido.")
 FPS = cap.get(cv2.CAP_PROP_FPS)
 
 cap.set(cv2.CAP_PROP_POS_FRAMES, 0*FPS)  # Reiniciar al segundo 0
@@ -141,7 +133,7 @@ while True:
             if track_id not in vehiculos_contados:
                 vehiculos_contados.add(track_id)
                 contador_total += 1
-                print(f"🚗 Contado ID: {track_id} | Total: {contador_total}")
+                print(f"Contado ID: {track_id} | Total: {contador_total}")
             
         if track_id in vehiculos_contados:
             color_punto = (0, 0, 255)
