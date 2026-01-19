@@ -158,7 +158,7 @@ En esta fase, utilizaremos PSO para encontrar la configuración óptima y de mej
 | `max_depth` | 7 | Profundidad máxima de cada árbol (controla la complejidad del modelo). |
 | `min_samples_split` | 5 | Número mínimo de muestras necesarias para dividir un nodo interno. |
 | `min_samples_leaf` | 3 | Número mínimo de muestras que debe contener una hoja terminal. |
-| `max_features` | 1.5 | Proporción de variables consideradas en cada división del árbol. |
+| `max_features` | 1.0 | Proporción de variables consideradas en cada división del árbol. |
 | `random_state` | 42 | Asegura que los resultados del entrenamiento sean reproducibles. |
 | `n_jobs` | -1 | Utiliza todos los núcleos del procesador disponibles para acelerar el entrenamiento. |
 
@@ -237,16 +237,17 @@ El RMSE es más alto que el MAE, lo que indica que hay errores más grandes ocas
 El modelo explica el **86% de la variabilidad** en los datos, es muy bueno para sistemas que involucran comportamiento humano.
 
 
-## Resultados Optenidos
+## Resultados Obtenidos
 
-A continuación se detallan los tiempos propuestos por el algoritmo desarrollado:
+Tras el entrenamiento y validación del modelo, se procedió a extraer los valores representativos para la configuración operativa de los semáforos.
 
-| Dirección | Propuesta (s) |
-| :--- | :--- | 
-| `Dirección 1` | 26 | 
-| `Dirección 2` | 26 | 
-| `Dirección 3` | 30 | 
-| `Dirección 4` | 28 | 
+### Propuesta de Nueva Programación Semafórica
 
-*Anterior mente estaba definido en 30 segundos*
+| Dirección | Tiempo Fijo Actual (s) | Nuevo Tiempo Optimizado (s) |
+| :--- | :---: | :---: |
+| **Dirección 1** | 30 | **26** |
+| **Dirección 2** | 30 | **26** |
+| **Dirección 3** | 30 | **30** |
+| **Dirección 4** | 30 | **28** |
 
+---
