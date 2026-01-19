@@ -1,51 +1,63 @@
 # Análisis final
 
-## Etapa 1: Encontramos el tiempo óptimo por ciclo
+## Etapa 1: Encontramos el tiempo óptimo con PSO
 
-Primeramente, preparamos los datos que ya habíamos obtenido del dataset anterior (aplicando técnicas de **clustering**) y realizamos un cálculo fila por fila. Esto tiene el fin de agregar una columna adicional de "tiempo óptimo" por cada ciclo. Por ejemplo: para 14 vehículos, el tiempo óptimo en que pasarían sería 40 segundos; para 5 vehículos, sería 22 segundos. Se agrega a cada fila para tener un punto de referencia.
+Para determinar el tiempo de luz verde óptimo, se utiliza un algoritmo de optimización metaheurística PSO.
 
-#### Explicación de la fórmula utilizada
+### configuracion del PSO
 
-Se implementan dos pasos para hallar este resultado:
+- Particulas = 20
+- Interacciones = 50
 
-**Paso 1: Calcular el Tiempo Base**  
-Dependiendo del nivel de tráfico (**Cluster**), se elige un nivel de confianza para asegurar que la mayoría de los vehículos alcancen a pasar:
+### Lógica
 
-- **Tráfico Pesado (C=0):** Se cubre el 95%.
-- **Tráfico Medio (C=1):** Se cubre el 75%.
-- **Tráfico Ligero (C=2):** Se cubre el 50%.
+El algoritmo evalúa la calidad de un tiempo de luz verde mediante una Función de Costo. El "puntaje" de cada solución candidata se calcula sumando penalizaciones basadas en tres factores clave:
 
-*¿Por qué no usamos, por ejemplo, el percentil 100%? Porque podría corresponder a un dato anómalo; por ejemplo, un pico de 30 vehículos cuando el 95% de las veces el flujo es de 14.*
+1.  **Penalización por Déficit ( No pasan todos los vehiculos ):**
+    Si el tiempo de verde propuesto es insuficiente para la cantidad de vehículos detectados, se aplica una penalización cuadrática.
+    > *Lógica: Si Vehículos > Capacidad → Costo Muy Alto*
 
-**Fórmula:**  
-> **T_base** = Vehículos detectados * Tiempo promedio vehículo
+2.  **Penalización por Exceso:**
+    Si el tiempo de verde es excesivo y la calle queda vacía, se aplica una penalización moderada. Se considera ineficiente.
+    > *Lógica: Si Capacidad > Vehículos → Costo Medio*
 
-**Paso 2: Aplicar Ajustes y Límites**
+3.  **Referencia Histórica:**
+    Se busca que el tiempo no se desvíe drásticamente de los estándares históricos del clúster (T_ref) para mantener la estabilidad del sistema.
 
-Al tiempo base se le suma un **margen de seguridad de 3 segundos**. El resultado final debe estar dentro de un rango lógico (entre 20 y 60 segundos).
+### Restricciones Dinámicas por Clúster
 
-*Esto se aplica por estándares: si es menor a 20 s, sería muy poco tiempo para un semáforo; si supera los 60 s, el tiempo de espera para las otras direcciones sería excesivo.*
+Se utilizan rangos de búsqueda adaptados específicamente al tipo de tráfico detectado en base a los clusters:
 
-**Fórmula Compacta:**  
-> **T_óptimo** = clip( **T_base** + 3, [20, 60] )
-
----
-
-#### Ejemplo Práctico
-
-Si tenemos los siguientes datos en una zona de **Tráfico Pesado (C=0)**:
-
-- **Vehículos:** 14.2  
-- **Tiempo entre autos:** 3.6 s  
-
-1. **Multiplicación:**  
-   >14.2 x 3.6 = 51.12 seg.
-2. **Suma de margen:**  
-   >51.12 + 3 = 54.12 seg.  
-3. **Resultado:**  
-   Como está en el rango [20, 60], el tiempo final es **54.12 s**.
+| Cluster | Tipo de Tráfico | Rango de Búsqueda |
+| :--- | :--- | :--- |
+| **0** | Tráfico Pesado | 35s - 90s |
+| **1** | Tráfico Medio | 20s - 60s |
+| **2** | Tráfico Ligero | 10s - 40s |
 
 ---
+
+### Ejemplo Práctico de Optimización
+
+Escenario de Tráfico Pesado un lunes por la mañana con los siguientes datos promedio:
+* **Vehículos:** 18
+* **Ocupación:** 60% 
+
+El enjambre prueba diferentes tiempos y evalúa su costo:
+
+1.  **Prueba con 20 segundos:**
+    * El sistema detecta un Déficit elevado que no pasan los 18 autos.
+    * Se aplica el factor de urgencia cuando ocupación > 50% y tiempo < 25s.
+    * Resultado: Costo altísimo. El enjambre descarta esta opción rápidamente.
+
+2.  **Prueba con 85 segundos:**
+    * Todos los autos pasan, pero sobra mucho tiempo.
+    * Resultado: Costo medio. Es viable, pero ineficiente.
+
+3.  **Convergencia en 58 segundos:**
+    * La capacidad cubre la demanda casi exactamente.
+    * No hay penalización por urgencia.
+    * El tiempo está dentro del rango permitido para el Cluster 0.
+    * Resultado: Costo Mínimo. Este valor se guarda como el `tiempo_optimo`.
 
 ## Etapa 2: Adición de características
 
@@ -77,8 +89,6 @@ Introducimos conceptos de ingeniería de tráfico para evaluar el rendimiento de
 
 - **Capacidad Teórica:** Define cuántos vehículos *podrían* pasar en el tiempo de verde asignado.  
 > **Capacidad** = Tiempo de Verde / Tiempo Medio entre autos
-
-
 
 - **Saturación Actual:** Es la relación entre los autos detectados y los que el semáforo realmente puede manejar.  
 > **Saturación** = Vehículos Observados / Capacidad Teórica
@@ -122,27 +132,33 @@ En esta etapa se suman las nuevas variables más las variables básicas y se pas
 
 ---
 
-## Fase 4: Optimización con PSO
+## Fase 4: Optimización configuracion con PSO
 
 En esta fase, utilizaremos PSO para encontrar la configuración óptima y de mejor rendimiento para el Random Forest, utilizando la técnica de medición MSE alcanzado para validar el camino correcto.
 
 ### Parámetros que estamos optimizando
 
 **El PSO busca el valor ideal dentro de estos rangos**
-Configuración: 
-- Partículas: 20
-- Dimensiones: 5
+
+**Configuración:** 
+- Particulas = 18 
+- Iteraciones = 25 
+- Parametros_PSO 
+   - 'c1' = 0.4  
+   - 'c2'= 0.8
+   - 'w' = 0.6
+
 - Función objetivo: minimizar MSE en validación cruzada
 
 **Estos son los resultados obtenidos:**
 
 | Hiperparámetro | Resultado | Descripción |
 | :--- | :--- | :--- |
-| `n_estimators` | 268 | Cantidad de árboles que componen el bosque. |
-| `max_depth` | 26 | Profundidad máxima de cada árbol (controla la complejidad del modelo). |
+| `n_estimators` | 456 | Cantidad de árboles que componen el bosque. |
+| `max_depth` | 7 | Profundidad máxima de cada árbol (controla la complejidad del modelo). |
 | `min_samples_split` | 5 | Número mínimo de muestras necesarias para dividir un nodo interno. |
-| `min_samples_leaf` | 1 | Número mínimo de muestras que debe contener una hoja terminal. |
-| `max_features` | log2 | Proporción de variables consideradas en cada división del árbol. |
+| `min_samples_leaf` | 3 | Número mínimo de muestras que debe contener una hoja terminal. |
+| `max_features` | 1.5 | Proporción de variables consideradas en cada división del árbol. |
 | `random_state` | 42 | Asegura que los resultados del entrenamiento sean reproducibles. |
 | `n_jobs` | -1 | Utiliza todos los núcleos del procesador disponibles para acelerar el entrenamiento. |
 
@@ -188,45 +204,49 @@ Iniciamos con la configuración obtenida anteriormente (se puede detallar en la 
 
 Para saber qué tan bueno es nuestro modelo base, comparamos sus predicciones contra los valores reales del conjunto de validación usando tres métricas clave:
 
-* **MAE (Error Absoluto Medio)**  
-* **RMSE (Raíz del Error Cuadrático Medio)**  
-* **R² (Coeficiente de Determinación)**
+| Técnica | Descripción Breve | Unidad de Medida |
+| :--- | :--- | :--- |
+| **MAE** | Promedio simple de los errores. Indica cuánto se equivoca el modelo en promedio sin exagerar los fallos. | Segundos ($s$) |
+| **MSE**  | Promedio de los errores al cuadrado. Penaliza severamente los errores grandes (picos) para detectar anomalías graves. | Segundos cuadrados ($s^2$) |
+| **RMSE** | Raíz cuadrada del MSE. Mantiene la penalización a los errores grandes pero devuelve el valor a una escala de tiempo legible. | Segundos ($s$) |
+| **R²**  | Mide la "calidad" del ajuste. Indica qué porcentaje de la variabilidad del tráfico es explicado por el modelo (0 a 1). | Adimensional (Sin unidad) |
 
 #### Resultados de las métricas de evaluación
 
 ```
-MAE: 0.57 segundos
-RMSE: 0.84 segundos
-R²: 0.98
+MAE Promedio:  1.149
+MSE Promedio:  7.704
+RMSE Promedio: 2.762
+R² Promedio:   0.8603
 ```
 
-- **MAE:** 0.57 segundos  
+- **MAE:** 1.149 segundos  
 
-En promedio, el modelo se equivoca por **0.57 segundos**, es excelente, es un error mínimo.
+En promedio, el modelo se equivoca por **1.149 segundos**, es excelente, es un error mínimo.
 
-- **RMSE:** 0.84 segundos  
+- **MSE:** 7.704
 
-El RMSE es más alto que el MAE, lo que indica que hay algunos errores más grandes ocasionales; sigue siendo muy bajo y confirma alta precisión.
+Esta en rango esperado.
 
-- **R²:** 0.98 
+- **RMSE:** 2.76 segundos  
 
-El modelo explica el **98% de la variabilidad** en los datos, es casi perfecto.
+El RMSE es más alto que el MAE, lo que indica que hay errores más grandes ocasionales; esto indica que existen cambios bruscos ocacionales, esperado conciderando el comportamiento humano y confirma alta precisión.
 
-- **MAPE:** 1.72%
+- **R²:** 0.86 
 
-Esto indica que el algoritmo tiende a fallar poco.
+El modelo explica el **86% de la variabilidad** en los datos, es muy bueno para sistemas que involucran comportamiento humano.
 
 
 ## Resultados Optenidos
 
 A continuación se detallan los tiempos propuestos por el algoritmo desarrollado:
 
-| Dirección | Propuesta (s) | Diferencia con anterior |
-| :--- | :--- | :--- |
-| `Dirección 1` | 26 | -7 s (-24.2%) |
-| `Dirección 2` | 26 | -7 s (-24.2%) |
-| `Dirección 3` | 32 | -1 s (-3.0%) |
-| `Dirección 4` | 27 | -6 s (-18.2%) |
+| Dirección | Propuesta (s) |
+| :--- | :--- | 
+| `Dirección 1` | 26 | 
+| `Dirección 2` | 26 | 
+| `Dirección 3` | 30 | 
+| `Dirección 4` | 28 | 
 
-*Anterior mente estaba definido en 33 segundos*
+*Anterior mente estaba definido en 30 segundos*
 
