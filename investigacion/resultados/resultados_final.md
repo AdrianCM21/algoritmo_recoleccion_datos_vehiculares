@@ -200,7 +200,8 @@ A diferencia de tener un único set estático, evaluamos el rendimiento promedio
 
 Iniciamos con la configuración obtenida anteriormente (se puede detallar en la tabla anterior).
 
-### Evaluación de Métricas
+
+## FASE 6: Evaluación de Métricas
 
 Para saber qué tan bueno es nuestro modelo base, comparamos sus predicciones contra los valores reales del conjunto de validación usando tres métricas clave:
 
@@ -237,7 +238,7 @@ El RMSE es más alto que el MAE, lo que indica que hay errores más grandes ocas
 El modelo explica el **86% de la variabilidad** en los datos, es muy bueno para sistemas que involucran comportamiento humano.
 
 
-## Resultados Obtenidos
+## Fase 7: Resultados Obtenidos
 
 Tras el entrenamiento y validación del modelo, se procedió a extraer los valores representativos para la configuración operativa de los semáforos.
 
